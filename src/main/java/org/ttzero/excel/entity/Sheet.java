@@ -20,15 +20,8 @@ package org.ttzero.excel.entity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.ttzero.excel.entity.e7.XMLWorksheetWriter;
-import org.ttzero.excel.entity.style.Border;
-import org.ttzero.excel.entity.style.BorderStyle;
-import org.ttzero.excel.entity.style.Fill;
+import org.ttzero.excel.entity.style.*;
 import org.ttzero.excel.entity.style.Font;
-import org.ttzero.excel.entity.style.Horizontals;
-import org.ttzero.excel.entity.style.NumFmt;
-import org.ttzero.excel.entity.style.PatternType;
-import org.ttzero.excel.entity.style.Styles;
-import org.ttzero.excel.entity.style.Verticals;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.manager.RelManager;
 import org.ttzero.excel.reader.Cell;
@@ -36,12 +29,8 @@ import org.ttzero.excel.reader.Dimension;
 import org.ttzero.excel.util.FileUtil;
 import org.ttzero.excel.util.StringUtil;
 
-import java.awt.Color;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.awt.*;
+import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -464,7 +453,7 @@ public abstract class Sheet implements Cloneable, Storable {
         fixedSize();
         this.width = width;
         if (headerReady) {
-            for (org.ttzero.excel.entity.Column hc : columns) {
+            for (Column hc : columns) {
                 hc.fixedSize(width);
             }
         }
@@ -1184,8 +1173,8 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * 使用默认样式并修改文字颜色和充填色创建统一表头样式
      *
-     * @param fontColor   文字颜色，可以使用{@link java.awt.Color}中定义的颜色名或者Hex值
-     * @param fillBgColor 充填色，可以使用{@link java.awt.Color}中定义的颜色名或者Hex值
+     * @param fontColor   文字颜色，可以使用{@link Color}中定义的颜色名或者Hex值
+     * @param fillBgColor 充填色，可以使用{@link Color}中定义的颜色名或者Hex值
      * @return 样式值
      * @deprecated 表头样式移到 {@link Column}中
      */
@@ -1481,36 +1470,19 @@ public abstract class Sheet implements Cloneable, Storable {
         char[] c;
         char A = 'A';
         if (n <= 26) {
-            c = tmpBuf[0];
-            c[0] = (char) (n - 1 + A);
+            c = new char[]{(char) (n - 1 + A)};
         } else if (n <= 702) {
             int t = n / 26, w = n % 26;
-            if (w == 0) {
-                t--;
-                w = 26;
-            }
-            c = tmpBuf[1];
-            c[0] = (char) (t - 1 + A);
-            c[1] = (char) (w - 1 + A);
+            if (w == 0) { t--; w = 26; }
+            c = new char[]{(char) (t - 1 + A), (char) (w - 1 + A)};
         } else {
             int tt = n / 26, t = tt / 26, w = n % 26, m = tt % 26;
-            if (w == 0) {
-                m--;
-                w = 26;
-            }
-            if (m <= 0) {
-                t--;
-                m += 26;
-            }
-            c = tmpBuf[2];
-            c[0] = (char) (t - 1 + A);
-            c[1] = (char) (m - 1 + A);
-            c[2] = (char) (w - 1 + A);
+            if (w == 0) { m--; w = 26; }
+            if (m <= 0) { t--; m += 26; }
+            c = new char[]{(char) (t - 1 + A), (char) (m - 1 + A), (char) (w - 1 + A)};
         }
         return c;
     }
-
-    private static final char[][] tmpBuf = new char[][]{ {65}, {65, 65}, {65, 65, 65} };
 
     /**
      * 将行列坐标转换为 Excel 样式的单元格地址

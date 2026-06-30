@@ -41,7 +41,6 @@ final class Murmur3_128Hasher extends AbstractStreamingHasher {
     private static final int CHUNK_SIZE = 16;
     private static final long C1 = 0x87c37b91114253d5L;
     private static final long C2 = 0x4cf5ad432745937fL;
-    private static final byte[] unsafeBytes = new byte[CHUNK_SIZE];
     private final int seed;
     private long h1;
     private long h2;
@@ -136,25 +135,27 @@ final class Murmur3_128Hasher extends AbstractStreamingHasher {
         h1 += h2;
         h2 += h1;
 
-        unsafeBytes[0] = (byte) (h1 & 0xFF);
-        unsafeBytes[1] = (byte) ((h1 >> 8) & 0xFF);
-        unsafeBytes[2] = (byte) ((h1 >> 16) & 0xFF);
-        unsafeBytes[3] = (byte) ((h1 >> 24) & 0xFF);
-        unsafeBytes[4] = (byte) ((h1 >> 32) & 0xFF);
-        unsafeBytes[5] = (byte) ((h1 >> 40) & 0xFF);
-        unsafeBytes[6] = (byte) ((h1 >> 48) & 0xFF);
-        unsafeBytes[7] = (byte) ((h1 >> 56) & 0xFF);
+        // 并发安全：每次创建独立的局部数组，避免静态共享缓冲区导致的结果覆盖
+        byte[] result = new byte[CHUNK_SIZE];
+        result[0] = (byte) (h1 & 0xFF);
+        result[1] = (byte) ((h1 >> 8) & 0xFF);
+        result[2] = (byte) ((h1 >> 16) & 0xFF);
+        result[3] = (byte) ((h1 >> 24) & 0xFF);
+        result[4] = (byte) ((h1 >> 32) & 0xFF);
+        result[5] = (byte) ((h1 >> 40) & 0xFF);
+        result[6] = (byte) ((h1 >> 48) & 0xFF);
+        result[7] = (byte) ((h1 >> 56) & 0xFF);
 
-        unsafeBytes[8]  = (byte) (h2 & 0xFF);
-        unsafeBytes[9]  = (byte) ((h2 >> 8) & 0xFF);
-        unsafeBytes[10] = (byte) ((h2 >> 16) & 0xFF);
-        unsafeBytes[11] = (byte) ((h2 >> 24) & 0xFF);
-        unsafeBytes[12] = (byte) ((h2 >> 32) & 0xFF);
-        unsafeBytes[13] = (byte) ((h2 >> 40) & 0xFF);
-        unsafeBytes[14] = (byte) ((h2 >> 48) & 0xFF);
-        unsafeBytes[15] = (byte) ((h2 >> 56) & 0xFF);
+        result[8]  = (byte) (h2 & 0xFF);
+        result[9]  = (byte) ((h2 >> 8) & 0xFF);
+        result[10] = (byte) ((h2 >> 16) & 0xFF);
+        result[11] = (byte) ((h2 >> 24) & 0xFF);
+        result[12] = (byte) ((h2 >> 32) & 0xFF);
+        result[13] = (byte) ((h2 >> 40) & 0xFF);
+        result[14] = (byte) ((h2 >> 48) & 0xFF);
+        result[15] = (byte) ((h2 >> 56) & 0xFF);
 
-        return unsafeBytes;
+        return result;
     }
 
     private static long fmix64(long k) {

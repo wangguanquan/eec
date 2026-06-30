@@ -20,52 +20,26 @@ package org.ttzero.excel.entity;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.ttzero.excel.entity.e7.XMLWorksheetWriter;
-import org.ttzero.excel.entity.style.Border;
-import org.ttzero.excel.entity.style.ColorIndex;
-import org.ttzero.excel.entity.style.Fill;
-import org.ttzero.excel.entity.style.Font;
-import org.ttzero.excel.entity.style.NumFmt;
-import org.ttzero.excel.entity.style.Styles;
+import org.ttzero.excel.entity.style.*;
 import org.ttzero.excel.manager.Const;
-import org.ttzero.excel.reader.CrossDimension;
+import org.ttzero.excel.reader.*;
+import org.ttzero.excel.util.DateUtil;
 import org.ttzero.excel.util.FileUtil;
 import org.ttzero.excel.util.SAXReaderUtil;
+import org.ttzero.excel.util.StringUtil;
 import org.ttzero.excel.validation.ListValidation;
 import org.ttzero.excel.validation.Validation;
-import org.ttzero.excel.reader.Cell;
-import org.ttzero.excel.reader.CellType;
-import org.ttzero.excel.reader.Col;
-import org.ttzero.excel.reader.Dimension;
-import org.ttzero.excel.reader.Drawings;
-import org.ttzero.excel.reader.ExcelReader;
-import org.ttzero.excel.reader.FullSheet;
-import org.ttzero.excel.reader.RowSetIterator;
-import org.ttzero.excel.util.DateUtil;
-import org.ttzero.excel.util.StringUtil;
 
 import java.beans.IntrospectionException;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.AccessibleObject;
-import java.lang.reflect.Array;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import java.lang.reflect.*;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.BiFunction;
 
 import static org.ttzero.excel.entity.IWorksheetWriter.isString;
@@ -144,7 +118,9 @@ import static org.ttzero.excel.util.ReflectUtil.readMethodsMap;
 public class TemplateSheet extends Sheet {
     /**
      * 未实例化的列，可用于在写超出预知范围外的列
+     * @deprecated 存在并发安全风险，请使用 {@link #newUnallocatedColumn()} 替代
      */
+    @Deprecated
     protected static final Column UNALLOCATED_COLUMN = new Column();
     /**
      * 内置单元格类型-超链接样式
@@ -162,6 +138,19 @@ public class TemplateSheet extends Sheet {
      * 占位符前缀和后缀
      */
     protected String prefix = "${", suffix = "}";
+
+    /**
+     * 创建一个新的"未分配"列实例，每次调用返回独立对象，避免并发场景下
+     * 多线程共享可变单例 {@link #UNALLOCATED_COLUMN} 导致的数据竞争问题。
+     *
+     * @return 新的未分配列（线程安全）
+     */
+    private Column newUnallocatedColumn() {
+        Column col = new Column();
+        col.styles = workbook.getStyles();
+        col.cellStyle = 0; // General Style
+        return col;
+    }
     /**
      * 模板路径
      */
@@ -636,7 +625,8 @@ public class TemplateSheet extends Sheet {
                 case STRING:
                     if (rowIterator.hasFillCell && (pn = rowIterator.preNodes[i]) != null) {
                         fillCell = true;
-                        fillValue(row, cell, pn, UNALLOCATED_COLUMN);
+                        // 并发安全：每次创建独立的列实例，避免修改共享单例 UNALLOCATED_COLUMN
+                        fillValue(row, cell, pn, newUnallocatedColumn());
 
                         // 处理单行合并单元格
                         if (pn.m != null) {
@@ -700,7 +690,7 @@ public class TemplateSheet extends Sheet {
         if (consumerEnd) rowCommit(row0, row);
     }
 
-    protected void rowCommit(org.ttzero.excel.reader.Row row0, org.ttzero.excel.entity.Row row) {
+    protected void rowCommit(org.ttzero.excel.reader.Row row0, Row row) {
         PreCell pn;
         Object e;
         int len = Math.max(row0.getLastColumnIndex(), 0);
@@ -995,7 +985,7 @@ public class TemplateSheet extends Sheet {
      * @param originalSheet 源模板工作表
      * @return 列数
      */
-    protected int prepareCommonData(org.ttzero.excel.reader.FullSheet originalSheet) {
+    protected int prepareCommonData(FullSheet originalSheet) {
         // 获取列属性
         int len = 0;
         List<Col> cols = originalSheet.getCols();

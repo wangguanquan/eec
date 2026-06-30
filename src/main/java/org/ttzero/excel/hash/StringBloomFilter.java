@@ -58,8 +58,15 @@ public final class StringBloomFilter implements Predicate<String>, Serializable 
      * <p>Implementations should be collections of pure functions (i.e. stateless).
      */
     static class Strategy {
-        // Hasher Functions
-        private final Murmur3_128Hasher hasher = new Murmur3_128Hasher(0);
+        // 并发安全：每个线程持有独立的 Murmur3_128Hasher 实例，
+        // 避免 clear()→putBytes()→hash() 链条中 h1/h2/length/buffer 的竞态覆盖
+        private static final ThreadLocal<Murmur3_128Hasher> HASHER = new ThreadLocal<Murmur3_128Hasher>() {
+            @Override
+            protected Murmur3_128Hasher initialValue() {
+                return new Murmur3_128Hasher(0);
+            }
+        };
+
         /**
          * Sets {@code numHashFunctions} bits of the given bit array, by hashing a user element.
          *
@@ -67,6 +74,7 @@ public final class StringBloomFilter implements Predicate<String>, Serializable 
          */
         public boolean put(String object, Charset charset, int numHashFunctions, LockFreeBitArray bits) {
             long bitSize = bits.bitSize();
+            Murmur3_128Hasher hasher = HASHER.get();
             byte[] bytes = hasher.clear().putBytes(object.getBytes(charset)).hash();
             long hash1 = fromBytes(bytes[7], bytes[6], bytes[5], bytes[4], bytes[3], bytes[2], bytes[1], bytes[0]);
             long hash2 = fromBytes(bytes[15], bytes[14], bytes[13], bytes[12], bytes[11], bytes[10], bytes[9], bytes[8]);
@@ -87,6 +95,7 @@ public final class StringBloomFilter implements Predicate<String>, Serializable 
          */
         public boolean mightContain(String object, Charset charset, int numHashFunctions, LockFreeBitArray bits) {
             long bitSize = bits.bitSize();
+            Murmur3_128Hasher hasher = HASHER.get();
             byte[] bytes = hasher.clear().putBytes(object.getBytes(charset)).hash();
             long hash1 = fromBytes(bytes[7], bytes[6], bytes[5], bytes[4], bytes[3], bytes[2], bytes[1], bytes[0]);
             long hash2 = fromBytes(bytes[15], bytes[14], bytes[13], bytes[12], bytes[11], bytes[10], bytes[9], bytes[8]);

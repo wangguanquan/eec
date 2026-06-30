@@ -213,10 +213,21 @@ public class SimpleSheet<T> extends ListSheet<T> {
             ignoreHeader();
             setHeaderRowHeight(-1D);
         }
-        UNALLOCATED_COLUMN.styles = workbook.getStyles();
-        UNALLOCATED_COLUMN.cellStyle = 0; // General Style
 
         return columns;
+    }
+
+    /**
+     * 创建一个新的"未分配"列实例，每次调用返回独立对象，避免并发场景下
+     * 多线程共享可变单例导致的数据竞争问题。
+     *
+     * @return 新的未分配列（线程安全）
+     */
+    private Column newUnallocatedColumn() {
+        Column col = new Column();
+        col.styles = workbook.getStyles();
+        col.cellStyle = 0; // General Style
+        return col;
     }
 
     /**
@@ -289,13 +300,14 @@ public class SimpleSheet<T> extends ListSheet<T> {
             Cell[] cells = row.realloc(len);
             for (int i = 0; i < len; i++) {
                 Object e = null;
-                Column column = i < columns.length ? columns[i] : UNALLOCATED_COLUMN;
+                Column column = i < columns.length ? columns[i] : newUnallocatedColumn();
                 // 根据下标取数
                 if (!column.isIgnoreValue()) {
                     if (type == 1) e = sub.get(i);
                     else e = Array.get(rowData, i);
                 }
-                column.clazz = null; // 无法确定纵向类型完全一致所以这里将缓存的类型清除
+                // 仅对已声明的列清除缓存类型，避免修改新建的临时列实例
+                if (i < columns.length) column.clazz = null; // 无法确定纵向类型完全一致所以这里将缓存的类型清除
                 Cell cell = cells[i];
                 resetCellValueAndStyle(row, cell, rowData, e, column);
                 // 日期类型添加默认format

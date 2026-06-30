@@ -20,9 +20,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.Writer;
 
-import static java.lang.Character.isHighSurrogate;
-import static java.lang.Character.isLowSurrogate;
-import static java.lang.Character.isSurrogate;
+import static java.lang.Character.*;
 
 /**
  * Single-threaded operation stream, internal multiplexing buffer
@@ -38,13 +36,8 @@ public class ExtBufferedWriter extends BufferedWriter {
 
     public ExtBufferedWriter(Writer out, int sz) {
         super(out, sz);
-
-        for (int i = 0; i < CACHE_CHAR_ARRAY.length; i++) {
-            CACHE_CHAR_ARRAY[i] = new char[i + 1];
-        }
     }
 
-    private final static char[][] CACHE_CHAR_ARRAY = new char[25][];
     static final char[] MIN_INTEGER_CHARS = {'-', '2', '1', '4', '7', '4', '8', '3', '6', '4', '8'};
     static final char[] MIN_LONG_CHARS = "-9223372036854775808".toCharArray();
     private static final char[][] ESCAPE_CHARS = new char[63][];
@@ -176,8 +169,10 @@ public class ExtBufferedWriter extends BufferedWriter {
         if (i == Integer.MIN_VALUE)
             return MIN_INTEGER_CHARS;
         int size = stringSize(i);
-        getChars(i, size, CACHE_CHAR_ARRAY[size - 1]);
-        return CACHE_CHAR_ARRAY[size - 1];
+        // 并发安全：每次创建独立的局部数组，避免全局共享缓冲区导致结果覆盖
+        char[] buf = new char[size];
+        getChars(i, size, buf);
+        return buf;
     }
 
 
@@ -212,8 +207,10 @@ public class ExtBufferedWriter extends BufferedWriter {
         if (i == Long.MIN_VALUE)
             return MIN_LONG_CHARS;
         int size = stringSize(i);
-        getChars(i, size, CACHE_CHAR_ARRAY[size - 1]);
-        return CACHE_CHAR_ARRAY[size - 1];
+        // 并发安全：每次创建独立的局部数组，避免全局共享缓冲区导致结果覆盖
+        char[] buf = new char[size];
+        getChars(i, size, buf);
+        return buf;
     }
 
     // Requires positive x
