@@ -43,7 +43,7 @@ import static org.junit.Assert.*;
  *   <li>并发 Workbook 导出 — 多线程同时调用 {@code writeData()} PUSH 模式写入</li>
  * </ul>
  *
- * @author test
+ * @author onceMirsery
  */
 public class ConcurrencySafetyTest extends WorkbookTest {
 
