@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2024, guanquan.wang@hotmail.com All Rights Reserved.
+ * Copyright (c) 2017-2022, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,7 +43,7 @@ import static org.junit.Assert.*;
  *   <li>并发 Workbook 导出 — 多线程同时调用 {@code writeData()} PUSH 模式写入</li>
  * </ul>
  *
- * @author onceMirsery
+ * @author onceMirsery (cmiracle@163.com)
  */
 public class ConcurrencySafetyTest extends WorkbookTest {
 
