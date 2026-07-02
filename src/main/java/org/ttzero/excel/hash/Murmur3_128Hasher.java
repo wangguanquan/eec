@@ -41,7 +41,7 @@ final class Murmur3_128Hasher extends AbstractStreamingHasher {
     private static final int CHUNK_SIZE = 16;
     private static final long C1 = 0x87c37b91114253d5L;
     private static final long C2 = 0x4cf5ad432745937fL;
-    private static final byte[] unsafeBytes = new byte[CHUNK_SIZE];
+    private final byte[] unsafeBytes = new byte[CHUNK_SIZE];
     private final int seed;
     private long h1;
     private long h2;

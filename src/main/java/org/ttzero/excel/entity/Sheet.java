@@ -1481,17 +1481,14 @@ public abstract class Sheet implements Cloneable, Storable {
         char[] c;
         char A = 'A';
         if (n <= 26) {
-            c = tmpBuf[0];
-            c[0] = (char) (n - 1 + A);
+            c = new char[]{(char) (n - 1 + A)};
         } else if (n <= 702) {
             int t = n / 26, w = n % 26;
             if (w == 0) {
                 t--;
                 w = 26;
             }
-            c = tmpBuf[1];
-            c[0] = (char) (t - 1 + A);
-            c[1] = (char) (w - 1 + A);
+            c = new char[]{(char) (t - 1 + A), (char) (w - 1 + A)};
         } else {
             int tt = n / 26, t = tt / 26, w = n % 26, m = tt % 26;
             if (w == 0) {
@@ -1502,15 +1499,10 @@ public abstract class Sheet implements Cloneable, Storable {
                 t--;
                 m += 26;
             }
-            c = tmpBuf[2];
-            c[0] = (char) (t - 1 + A);
-            c[1] = (char) (m - 1 + A);
-            c[2] = (char) (w - 1 + A);
+            c = new char[]{(char) (t - 1 + A), (char) (m - 1 + A), (char) (w - 1 + A)};
         }
         return c;
     }
-
-    private static final char[][] tmpBuf = new char[][]{ {65}, {65, 65}, {65, 65, 65} };
 
     /**
      * 将行列坐标转换为 Excel 样式的单元格地址

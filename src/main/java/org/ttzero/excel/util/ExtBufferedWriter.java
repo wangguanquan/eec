@@ -39,12 +39,12 @@ public class ExtBufferedWriter extends BufferedWriter {
     public ExtBufferedWriter(Writer out, int sz) {
         super(out, sz);
 
-        for (int i = 0; i < CACHE_CHAR_ARRAY.length; i++) {
-            CACHE_CHAR_ARRAY[i] = new char[i + 1];
+        for (int i = 0; i < cacheCharArray.length; i++) {
+            cacheCharArray[i] = new char[i + 1];
         }
     }
 
-    private final static char[][] CACHE_CHAR_ARRAY = new char[25][];
+    private final char[][] cacheCharArray = new char[25][];
     static final char[] MIN_INTEGER_CHARS = {'-', '2', '1', '4', '7', '4', '8', '3', '6', '4', '8'};
     static final char[] MIN_LONG_CHARS = "-9223372036854775808".toCharArray();
     private static final char[][] ESCAPE_CHARS = new char[63][];
@@ -172,12 +172,12 @@ public class ExtBufferedWriter extends BufferedWriter {
         super.write(cb, off, len);
     }
 
-    public static char[] toChars(int i) {
+    public char[] toChars(int i) {
         if (i == Integer.MIN_VALUE)
             return MIN_INTEGER_CHARS;
         int size = stringSize(i);
-        getChars(i, size, CACHE_CHAR_ARRAY[size - 1]);
-        return CACHE_CHAR_ARRAY[size - 1];
+        getChars(i, size, cacheCharArray[size - 1]);
+        return cacheCharArray[size - 1];
     }
 
 
@@ -208,12 +208,12 @@ public class ExtBufferedWriter extends BufferedWriter {
         if (negative) buf[--maxIndex] = '-';
     }
 
-    public static char[] toChars(long i) {
+    public char[] toChars(long i) {
         if (i == Long.MIN_VALUE)
             return MIN_LONG_CHARS;
         int size = stringSize(i);
-        getChars(i, size, CACHE_CHAR_ARRAY[size - 1]);
-        return CACHE_CHAR_ARRAY[size - 1];
+        getChars(i, size, cacheCharArray[size - 1]);
+        return cacheCharArray[size - 1];
     }
 
     // Requires positive x

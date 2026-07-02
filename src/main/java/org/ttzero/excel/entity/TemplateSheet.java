@@ -145,7 +145,7 @@ public class TemplateSheet extends Sheet {
     /**
      * 未实例化的列，可用于在写超出预知范围外的列
      */
-    protected static final Column UNALLOCATED_COLUMN = new Column();
+    protected final Column UNALLOCATED_COLUMN = new Column();
     /**
      * 内置单元格类型-超链接样式
      */
