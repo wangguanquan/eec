@@ -359,6 +359,10 @@ try (ExcelReader reader = ExcelReader.read(Paths.get("F:/excel/abc.xlsx"))) {
 ```
 
 ## CHANGELOG
+Version 0.5.29 (2026-07-03)
+-------------
+- 修复静态共享可变对象导致的线程安全问题(#375,#473)
+
 Version 0.5.28 (2026-04-26)
 -------------
 - 修复FullSheet部分情况下读取公式时出现越界问题
@@ -377,21 +381,10 @@ Version 0.5.26 (2025-09-29)
 - 优化Row#lastColumnIndex计算逻辑，调整后将不再自动对齐(#454)
 - 删除CalcSheet和MergeSheet
 
-Version 0.5.25 (2025-09-09)
--------------
-- 读取文件时增加单引号转义处理(#438)
-- 移除获取系统用户名做为默认创建人的逻辑以避免信息泄漏
-- 支持使用setStartCoordinate来指定表格的输出起始坐标
-- 修复自动分页后globalStyleIndex全局样式丢失问题(#442)
-- 修复TemplateSheet列表只有2行数据且表格下方有合并单元格时造成样式混乱的问题(#450)
-- 修复某些情况因单元格未重置长度导致超出下标的单元格被输出的问题
-- 修复某些情况下CSV读取行结束判断问题导致两行合并为一行的问题
-- 修复某些情况下无法读取公式的问题
-
 [更多...](./CHANGELOG)
 
 [releases]: https://github.com/wangguanquan/eec/releases
-[release-image]: http://img.shields.io/badge/release-0.5.28-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.5.29-blue.svg?style=flat
 
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat
