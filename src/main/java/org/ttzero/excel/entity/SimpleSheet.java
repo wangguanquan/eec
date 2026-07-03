@@ -60,7 +60,7 @@ public class SimpleSheet<T> extends ListSheet<T> {
     /**
      * 未实例化的列，可用于在写超出预知范围外的列
      */
-    protected static final Column UNALLOCATED_COLUMN = new Column();
+    protected final Column UNALLOCATED_COLUMN = new Column();
     /**
      * 实例化工作表，未指定工作表名称时默认以{@code 'Sheet'+id}命名
      */
