@@ -22,11 +22,14 @@ import org.ttzero.excel.entity.e7.XMLCellValueAndStyle;
 import org.ttzero.excel.entity.e7.XMLZebraLineCellValueAndStyle;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.PatternType;
+import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.reader.ExcelReader;
 
 import java.awt.Color;
 import java.io.IOException;
+import java.math.BigDecimal;
 
+import static org.junit.Assert.assertEquals;
 import static org.ttzero.excel.entity.ZebraLineTest.assertNonZebraLine;
 import static org.ttzero.excel.entity.ZebraLineTest.assertZebraLineEquals;
 
@@ -151,5 +154,55 @@ public class XMLCellValueAndStyleTest extends WorkbookTest {
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             assertNonZebraLine(reader.sheet(0).header(1).rows());
         }
+    }
+
+    @Test public void testResetWhenColumnValueTypeChanged() {
+        XMLCellValueAndStyle cellValueAndStyle = new XMLCellValueAndStyle();
+        Column column = new Column("value").setStyleProcessor((o, style, styles) -> style);
+        column.styles = new Workbook().getStyles();
+
+        Row row = new Row();
+        Cell firstCell = new Cell(1);
+        cellValueAndStyle.reset(row, firstCell, 1, column);
+        assertEquals(Integer.class, column.getClazz());
+        assertEquals(Cell.NUMERIC, firstCell.t);
+        assertEquals(1, firstCell.intVal);
+
+        Cell stringCell = new Cell(1);
+        cellValueAndStyle.reset(row, stringCell, "abc", column);
+        assertEquals(String.class, column.getClazz());
+        assertEquals(Cell.INLINESTR, stringCell.t);
+        assertEquals("abc", stringCell.stringVal);
+
+        Cell longCell = new Cell(1);
+        cellValueAndStyle.reset(row, longCell, 2L, column);
+        assertEquals(Long.class, column.getClazz());
+        assertEquals(Cell.LONG, longCell.t);
+        assertEquals(2L, longCell.longVal);
+
+        Cell doubleCell = new Cell(1);
+        cellValueAndStyle.reset(row, doubleCell, 3.5D, column);
+        assertEquals(Double.class, column.getClazz());
+        assertEquals(Cell.DOUBLE, doubleCell.t);
+        assertEquals(3.5D, doubleCell.doubleVal, 0.0D);
+
+        Cell boolCell = new Cell(1);
+        cellValueAndStyle.reset(row, boolCell, true, column);
+        assertEquals(Boolean.class, column.getClazz());
+        assertEquals(Cell.BOOL, boolCell.t);
+        assertEquals(true, boolCell.boolVal);
+
+        Cell charCell = new Cell(1);
+        cellValueAndStyle.reset(row, charCell, 'Z', column);
+        assertEquals(Character.class, column.getClazz());
+        assertEquals(Cell.CHARACTER, charCell.t);
+        assertEquals('Z', charCell.charVal);
+
+        Cell decimalCell = new Cell(1);
+        BigDecimal decimal = new BigDecimal("6.25");
+        cellValueAndStyle.reset(row, decimalCell, decimal, column);
+        assertEquals(BigDecimal.class, column.getClazz());
+        assertEquals(Cell.DECIMAL, decimalCell.t);
+        assertEquals(decimal, decimalCell.decimal);
     }
 }

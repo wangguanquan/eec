@@ -118,8 +118,8 @@ public interface ICellValueAndStyle {
             setNullValue(row, cell, hc);
             return;
         }
-        if (clazz == null) {
-            clazz = e.getClass();
+        clazz = resolveCellValueClass(e, clazz);
+        if (clazz != hc.getClazz()) {
             hc.setClazz(clazz);
         }
         if (isString(clazz)) {
@@ -179,6 +179,23 @@ public interface ICellValueAndStyle {
         else {
             unknownType(row, cell, e, hc, clazz);
         }
+    }
+
+    /**
+     * 解析实际写入单元格的数据类型，避免复用的列类型与实际值类型不一致时发生强制类型转换异常
+     *
+     * @param e           单元格的值
+     * @param columnClass 当前列缓存的数据类型
+     * @return 实际用于写入单元格的数据类型
+     */
+    default Class<?> resolveCellValueClass(Object e, Class<?> columnClass) {
+        if (e == null) {
+            return columnClass;
+        }
+        if (columnClass == null || !columnClass.isInstance(e)) {
+            return e.getClass();
+        }
+        return columnClass;
     }
 
     /**
