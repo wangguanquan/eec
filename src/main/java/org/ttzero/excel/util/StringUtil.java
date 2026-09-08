@@ -271,10 +271,6 @@ public class StringUtil {
         return -1;
     }
 
-    // XML转义使用
-    //private static StringWriter sw;
-    //private static ExtBufferedWriter writer;
-
     /**
      * XML转义
      *
@@ -292,7 +288,7 @@ public class StringUtil {
             writer.flush();
             txt = sw.toString();
         } catch (IOException e) {
-            // Ignore            
+            // Ignore
         }
         return txt;
     }
