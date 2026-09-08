@@ -272,8 +272,8 @@ public class StringUtil {
     }
 
     // XML转义使用
-    private static StringWriter sw;
-    private static ExtBufferedWriter writer;
+    //private static StringWriter sw;
+    //private static ExtBufferedWriter writer;
 
     /**
      * XML转义
@@ -282,20 +282,19 @@ public class StringUtil {
      * @return 转义后的字符串
      */
     public static String escapeString(String txt) {
-        if (isEmpty(txt)) return txt;
-        if (sw != null) sw.getBuffer().setLength(0);
-        else {
-            sw = new StringWriter();
-            writer = new ExtBufferedWriter(sw);
+        if (isEmpty(txt)) {
+            return txt;
         }
+        StringWriter sw = new StringWriter();
+        ExtBufferedWriter writer = new ExtBufferedWriter(sw);
         try {
             writer.escapeWrite(txt);
             writer.flush();
-            txt = sw.toString();
+            return sw.toString();
         } catch (IOException e) {
             // Ignore
+            return txt;
         }
-        return txt;
     }
 
     /**
