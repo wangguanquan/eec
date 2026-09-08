@@ -290,11 +290,11 @@ public class StringUtil {
         try {
             writer.escapeWrite(txt);
             writer.flush();
-            return sw.toString();
+            txt = sw.toString();
         } catch (IOException e) {
-            // Ignore
-            return txt;
+            // Ignore            
         }
+        return txt;
     }
 
     /**
