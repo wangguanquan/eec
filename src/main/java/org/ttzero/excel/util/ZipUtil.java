@@ -19,8 +19,12 @@ package org.ttzero.excel.util;
 import org.ttzero.excel.manager.Const;
 
 import java.io.BufferedOutputStream;
+import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -41,6 +45,11 @@ import static org.ttzero.excel.util.FileUtil.exists;
  * @author guanquan.wang on 2017/10/13.
  */
 public class ZipUtil {
+    // ZIP64 uses the maximum 32-bit value as the size placeholder.
+    private static final long ZIP64_MAGIC_VALUE = 0xFFFFFFFFL;
+    // ZIP64 0x2D
+    private static final byte ZIP64_VERSION = 45;
+
     /**
      * Compression level for middle compression.
      */
@@ -106,10 +115,13 @@ public class ZipUtil {
      * @throws IOException if error occur.
      */
     private static Path zip(Path destPath, boolean compressRoot, int compressionLevel, Path... srcPath) throws IOException {
-        ZipOutputStream zos = new ZipOutputStream(
+        CountingOutputStream cos = new CountingOutputStream(
             new BufferedOutputStream(Files.newOutputStream(destPath, StandardOpenOption.CREATE)));
+        ZipOutputStream zos = new ZipOutputStream(cos);
         zos.setLevel(Math.min(Math.max(compressionLevel, 0), 9));
         List<Path> paths = new ArrayList<>();
+        // Local header offsets of entries whose uncompressed size requires ZIP64.
+        List<Long> zip64Offsets = new ArrayList<>();
         int i = 0, index = 0;
         int[] array = new int[srcPath.length];
         for (Path src : srcPath) {
@@ -141,6 +153,10 @@ public class ZipUtil {
                 } else {
                     name = paths.get(j).toString().substring(len + 1);
                 }
+                // required Zip64.
+                if (Files.size(paths.get(j)) >= ZIP64_MAGIC_VALUE) {
+                    zip64Offsets.add(cos.getCount());
+                }
                 zos.putNextEntry(new ZipEntry(name));
                 Files.copy(paths.get(j), zos);
                 zos.closeEntry();
@@ -152,7 +168,62 @@ public class ZipUtil {
         }
 
         zos.close();
+        // Patch after close so all buffered ZIP data has been written to disk.
+        if (!zip64Offsets.isEmpty()) {
+            patchZip64LocalHeaders(destPath, zip64Offsets);
+        }
         return destPath;
+    }
+
+    // ZIP local file header signature: PK\003\004
+    private static void patchZip64LocalHeaders(Path zipPath, List<Long> offsets) throws IOException {
+        byte[] signature = new byte[4];
+        try (SeekableByteChannel channel = Files.newByteChannel(zipPath, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
+            for (long offset : offsets) {
+                ByteBuffer buffer = ByteBuffer.wrap(signature);
+                channel.position(offset);
+                // A channel read is not guaranteed to fill the buffer in one call.
+                while (buffer.hasRemaining()) {
+                    if (channel.read(buffer) < 0) {
+                        break;
+                    }
+                }
+                // Stop patching if an offset does not point to a complete local file header.
+                if (buffer.hasRemaining() || signature[0] != 0x50 || signature[1] != 0x4B
+                    || signature[2] != 0x03 || signature[3] != 0x04) {
+                    break;
+                }
+                // version needed to extract is the two-byte field after the signature.
+                channel.position(offset + 4);
+                buffer = ByteBuffer.wrap(new byte[] { ZIP64_VERSION, 0x00 });
+                while (buffer.hasRemaining()) channel.write(buffer);
+            }
+        }
+    }
+
+    // Tracks the exact local header offsets written by ZipOutputStream.
+    private static final class CountingOutputStream extends FilterOutputStream {
+        private long count;
+
+        CountingOutputStream(OutputStream out) {
+            super(out);
+        }
+
+        long getCount() {
+            return count;
+        }
+
+        @Override
+        public void write(int b) throws IOException {
+            out.write(b);
+            count++;
+        }
+
+        @Override
+        public void write(byte[] b, int off, int len) throws IOException {
+            out.write(b, off, len);
+            count += len;
+        }
     }
 
     private static List<Path> subPath(Path path) throws IOException {
