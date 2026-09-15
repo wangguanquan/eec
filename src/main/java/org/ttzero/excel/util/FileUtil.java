@@ -160,7 +160,14 @@ public class FileUtil {
         try (FileChannel inChannel = new FileInputStream(srcFile).getChannel();
              FileChannel outChannel = new FileOutputStream(descFile).getChannel()) {
 
-            inChannel.transferTo(0, inChannel.size(), outChannel);
+            long position = 0L, size = inChannel.size();
+            while (position < size) {
+                long transferred = inChannel.transferTo(position, size - position, outChannel);
+                if (transferred <= 0L) {
+                    throw new IOException("Copy file failed at position " + position);
+                }
+                position += transferred;
+            }
         } catch (IOException e) {
             LOGGER.error("Copy file from [{}] to [{}] failed...", srcFile.getPath(), descFile.getPath());
         }

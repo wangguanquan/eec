@@ -285,7 +285,15 @@ public class SharedStrings implements Storable, Closeable {
      */
     private void transfer(FileChannel channel) throws IOException {
         try (FileChannel tempChannel = FileChannel.open(temp, StandardOpenOption.READ)) {
-            tempChannel.transferTo(0, tempChannel.size(), channel);
+            long position = 0L, size = tempChannel.size();
+            while (position < size) {
+                // JDK 8 may transfer at most Integer.MAX_VALUE bytes in one call.
+                long transferred = tempChannel.transferTo(position, size - position, channel);
+                if (transferred <= 0L) {
+                    throw new IOException("Transfer shared strings failed at position " + position);
+                }
+                position += transferred;
+            }
         }
     }
 
