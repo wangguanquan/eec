@@ -1541,7 +1541,7 @@ public class Row {
                 dotIdx = i - 1;
             }
             else if (c == 'e' || c == 'E') {
-                if (eIdx > 0 || i == 1) return -1;
+                if (eIdx >= 0 || i - j == 1) return -1;
                 eIdx = i - 1;
                 if (i + 1 > b) return -1;
                 c = cb[i++];
@@ -1556,7 +1556,7 @@ public class Row {
 //        int intPart = dotIdx == -1 ? eIdx == -1 ? b : eIdx : dotIdx, ePart = eIdx > 0 ? b - ep : 0, dotPart = dotIdx >= 0 ? (eIdx > 0 ? eIdx : b) - dotIdx - 1 : 0;
 
         if (b - j == 1 && dotIdx >= 0) return -1;
-        return dotIdx >= 0 || eIdx > 1 ? 3 : b - j >= 10 ? 2 : 1;
+        return dotIdx >= 0 || eIdx >= 0 ? 3 : b - j >= 10 ? 2 : 1;
     }
 }
 
