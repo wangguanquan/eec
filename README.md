@@ -359,6 +359,13 @@ try (ExcelReader reader = ExcelReader.read(Paths.get("F:/excel/abc.xlsx"))) {
 ```
 
 ## CHANGELOG
+Version 0.5.30 (2026-09-16)
+-------------
+- 增加单个Sheet页超4G的支持(#478)
+- 修复静态共享可变对象导致的线程安全问题(#479)
+- 修复文件超过2G导出内容有概率不完整的问题
+- 修复读科学计数法的检测问题
+
 Version 0.5.29 (2026-07-03)
 -------------
 - 修复静态共享可变对象导致的线程安全问题(#375,#473)
@@ -374,17 +381,10 @@ Version 0.5.27 (2025-10-28)
 - 优化Validation内容超过255时打开文件异常的问题
 - TemplateSheet支持复制Validation
 
-Version 0.5.26 (2025-09-29)
--------------
-- 支持PUSH模式主动写数据（目前只有继承于ListSheet的类支持）
-- 修复指定表头行之前有空行时会自动跳过空行取第一个非空行做为表头的问题(#456)
-- 优化Row#lastColumnIndex计算逻辑，调整后将不再自动对齐(#454)
-- 删除CalcSheet和MergeSheet
-
 [更多...](./CHANGELOG)
 
 [releases]: https://github.com/wangguanquan/eec/releases
-[release-image]: http://img.shields.io/badge/release-0.5.29-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.5.30-blue.svg?style=flat
 
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat
